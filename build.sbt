@@ -16,6 +16,9 @@ libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.0.3" % "provided
 libraryDependencies += "org.apache.hbase" % "hbase-client" % "1.0.3" % "provided"
 libraryDependencies += "org.apache.hbase" % "hbase-server" % "1.0.3" % "provided"
 
+// https://mvnrepository.com/artifact/org.lionsoul/jcseg-core
+libraryDependencies += "org.lionsoul" % "jcseg-core" % "2.0.0"
+
 assemblyMergeStrategy in assembly := {
   case PathList(ps@_*) if ps.last endsWith "*.xml" => MergeStrategy.first
   case PathList(ps@_*) if ps.last endsWith "*.class" => MergeStrategy.first
