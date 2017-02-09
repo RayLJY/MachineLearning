@@ -21,7 +21,7 @@ public class Segment implements Serializable {
 
     private static String[] ePunctuation = ", \\. : ; ' \" / \\\\ \\[ \\] \\{ \\} \\| \\( \\) \\s - ! < > \\? _ @".split(" ");
 
-    private static String[] cPunctuation = "，,。,《,》,：,；,「,」,【,】,￥,“,”,、,（,）".split(",");
+    private static String[] cPunctuation = "，,。,《,》,：,；,「,」,【,】,￥,“,”,、,（,）,\\.".split(",");
 
     public Segment() {
         JcsegTaskConfig config = new JcsegTaskConfig(Segment.class.getResource("").getPath() + "/jcseg.properties");
