@@ -16,11 +16,17 @@ import org.apache.spark.mllib.linalg.Vector
   */
 object TFIDF_DF {
 
+  /**
+    * calculates TF value and adds value into dataFrame
+    */
   def dataFrameAddTF(dataFrame: DataFrame, inputCol: String, outputCol: String, numFeatures: Int): DataFrame = {
     val hashingTF = new HashingTF().setNumFeatures(numFeatures).setInputCol(inputCol).setOutputCol(outputCol)
     hashingTF.transform(dataFrame)
   }
 
+  /**
+    * calculates TF-IDF value and adds the value into dataFrame
+    */
   def dataFrameAddTFIDF(dataFrame: DataFrame, inputCol: String, outputCol: String): DataFrame = {
     val idf = new IDF()
     idf.setInputCol(inputCol)
@@ -30,23 +36,34 @@ object TFIDF_DF {
     idfModel.transform(dataFrame)
   }
 
+  /**
+    * calculates TF value and adds value into dataFrame
+    * then changes into labeledPoint format
+    */
   def makeLabeledPointTF(dataFrame: DataFrame, inputCol: String, outputCol: String, numFeatures: Int, category: Double): RDD[LabeledPoint] = {
     val tf = dataFrameAddTF(dataFrame, inputCol, outputCol, numFeatures)
     dataFrame2LabeledPoint(tf, outputCol, category)
   }
 
+  /**
+    * calculates TF-IDF value and adds value into dataFrame
+    * then changes into labeledPoint format
+    */
   def makeLabeledPointTFIDF(dataFrame: DataFrame, inputCol: String, outputCol: String, category: Double): RDD[LabeledPoint] = {
     val tfIdf = dataFrameAddTFIDF(dataFrame, inputCol, outputCol)
     dataFrame2LabeledPoint(tfIdf, outputCol, category)
   }
 
+  /**
+    * changes dataFrame format to LabeledPoint format and marks category
+    */
   def dataFrame2LabeledPoint(dataFrame: DataFrame, tfIdf: String, category: Double): RDD[LabeledPoint] = {
     dataFrame.select(tfIdf).map { case Row(v: Vector) =>
       LabeledPoint(category, v)
     }
   }
 
-  //***********************************************  测试区  *********************************************************
+  //**********************************************  test area  ********************************************************
 
   case class dataSet(id: Int, words: List[String])
 
@@ -59,7 +76,7 @@ object TFIDF_DF {
     val path = "data/p1"
 
     val data = sc.wholeTextFiles(path)
-    //    data.foreach(println)
+    data.foreach(println)
 
     //分词数据集DataFrame
     val df = data.map { m =>

@@ -6,6 +6,9 @@ import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
 
 /**
   * Created by ray on 17/2/9.
+  *
+  * This util object is for Vector operation
+  * ps: I copy class `org.apache.spark.mllib.linalg.BLAS`
   */
 object VectorUtil extends Serializable{
 
@@ -39,14 +42,6 @@ object VectorUtil extends Serializable{
         throw new IllegalArgumentException(
           s"axpy only supports adding to a dense vector but got type ${y.getClass}.")
     }
-  }
-
-  /**
-    * y += a * x
-    */
-  private def axpy(a: Double, x: DenseVector, y: DenseVector): Unit = {
-    val n = x.size
-    f2jBLAS.daxpy(n, a, x.values, 1, y.values, 1)
   }
 
   /**

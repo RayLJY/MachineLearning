@@ -16,11 +16,17 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 object TFIDF_RDD {
 
+  /**
+    * turns a word to a hash value and calculates it's TF value
+    */
   def makeVectorTF(rdd: RDD[List[String]], numFeatures: Int): RDD[Vector] = {
     val hashingTF = new HashingTF(numFeatures)
     hashingTF.transform(rdd)
   }
 
+  /**
+    * turns a word to a hash value and calculates it's TF-IDF value
+    */
   def makeVectorTFIDF(rdd: RDD[List[String]], numFeatures: Int): RDD[Vector] = {
     val idf = new IDF()
     val tf = makeVectorTF(rdd, numFeatures)
@@ -28,29 +34,43 @@ object TFIDF_RDD {
     idfModel.transform(tf)
   }
 
+  /**
+    * calculates TF-IDF value of words
+    */
   def makeVectorTFIDF(rv: RDD[Vector]): RDD[Vector] = {
     val idf = new IDF()
     val idfModel = idf.fit(rv)
     idfModel.transform(rv)
   }
 
+  /**
+    * turns a word to a hash value and calculates it's TF value,
+    * then changes into labeledPoint format
+    */
   def makeLabeledPointTF(rdd: RDD[List[String]], numFeatures: Int, category: Double): RDD[LabeledPoint] = {
     val tf = makeVectorTF(rdd, numFeatures)
     Vector2LabeledPoint(tf, category)
   }
 
+  /**
+    * turns a word to a hash value and calculates it's TF-IDF value,
+    * then changes into labeledPoint format
+    */
   def makeLabeledPointTFIDF(rdd: RDD[List[String]], numFeatures: Int, category: Double): RDD[LabeledPoint] = {
     val tfIdf = makeVectorTFIDF(rdd, numFeatures)
     Vector2LabeledPoint(tfIdf, category)
   }
 
+  /**
+    * changes vector format to labeledPoint format and marks category
+    */
   def Vector2LabeledPoint(rv: RDD[Vector], category: Double): RDD[LabeledPoint] = {
     rv.map { v =>
       LabeledPoint(category, v.toSparse)
     }
   }
 
-  //**********************************************  测试区  ***********************************************************
+  //**********************************************  test area  ********************************************************
 
   def main(args: Array[String]): Unit = {
 
