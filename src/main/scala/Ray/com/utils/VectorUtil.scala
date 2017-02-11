@@ -1,4 +1,4 @@
-package Ray.com.Utils
+package Ray.com.utils
 
 import com.github.fommil.netlib.BLAS.{getInstance => NativeBLAS}
 import com.github.fommil.netlib.{F2jBLAS, BLAS => NetlibBLAS}

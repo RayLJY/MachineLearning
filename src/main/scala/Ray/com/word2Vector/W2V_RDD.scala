@@ -1,6 +1,6 @@
 package Ray.com.word2Vector
 
-import Ray.com.Utils.VectorUtil
+import Ray.com.utils.VectorUtil
 import Ray.com.segment.SegmentS
 import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
