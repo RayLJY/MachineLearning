@@ -1,6 +1,7 @@
 package Ray.com.machineLearning
 
-import Ray.com.machineLearning.FPGrowth.rating
+import java.{util => ju}
+
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -17,6 +18,8 @@ import scala.reflect.ClassTag
   */
 object Apriori {
 
+  val Separator = ","
+
   /**
     * be used to describe data of frequent pattern
     */
@@ -24,30 +27,30 @@ object Apriori {
                                              consequent: Array[Item],
                                              support: Double,
                                              confidence: Double,
-                                             lift: Double,
-                                             frequentCount: Long)
+                                             lift: Double)
 
   /**
     * count the number of every item in all transactions
     */
-  def countItem[Item: ClassTag](rdd: RDD[Array[Item]]): RDD[(Array[Item], Long)] = {
+  def countItemFreq[Item: ClassTag](rdd: RDD[Array[Item]], minCount: Long): Array[Item] = {
 
-    rdd.flatMap(x => x).map((_, 1)).reduceByKey(_ + _)
-      .map(pair => (Array(pair._1), pair._2.toLong))
+    rdd.flatMap(x => x.toSeq)
+      .map((_, 1L))
+      .reduceByKey(_ + _)
+      .filter(_._2 >= minCount)
+      .collect
+      .sortBy(-_._2)
+      .map(_._1)
   }
 
   /**
-    * count the number of pattern in all transactions
+    * use the rank of frequent item represent item
     */
-  def countPattern[Item: ClassTag](rdd: RDD[Array[Item]], pattern: RDD[Array[Item]]): RDD[(Array[Item], Long)] = {
-
-    val r = rdd.collect
-    pattern.map { p =>
-      val len = p.length
-      val count = r.map { transaction =>
-        transaction.intersect(p)
-      }.count(_.length == len)
-      (p, count)
+  def Item2Rank[Item: ClassTag](rdd: RDD[Array[Item]], itemRanks: Map[Item, Int]): RDD[Array[Int]] = {
+    rdd.map { transaction =>
+      val filtered = transaction.map(item => itemRanks.getOrElse(item, -1)).filter(_ >= 0)
+      ju.Arrays.sort(filtered)
+      filtered
     }
   }
 
@@ -57,57 +60,86 @@ object Apriori {
     */
   def freqPattern[Item: ClassTag](rdd: RDD[Array[Item]], minSupport: Double, numItem: Int = 2) = {
 
+    if (numItem < 2) {
+      throw new IllegalArgumentException(" the number of item of frequent patter must be greater than 1")
+    }
+
     val size = rdd.count()
     val minCount = Math.ceil(size * minSupport).toLong
 
-    val freqItemCount = countItem(rdd).filter(_._2 >= minCount)
+    val freqItem = countItemFreq(rdd, minCount)
 
-    var freqPatternCount = freqItemCount
-    var freqPattern = freqPatternCount.map(_._1)
+    val itemRanks = freqItem.zipWithIndex.toMap
 
-    for (_ <- 2 to numItem) {
-      freqPattern = makeFreqPattern(freqPattern)
-      freqPatternCount = countPattern(rdd, freqPattern).filter(_._2 >= minCount)
-      freqPattern = freqPatternCount.map(_._1)
+    var freqRank = itemRanks.values.toArray
+
+    val item2Rank = Item2Rank(rdd, itemRanks)
+
+    var antecedentCount: RDD[(String, Long)] = null
+    var freqPatternCount: RDD[(String, Long)] = null
+
+    for (i <- 1 to numItem) {
+
+      freqPatternCount = item2Rank.filter(_.length >= i)
+        .flatMap { transaction =>
+          val filtered = transaction.intersect(freqRank)
+          genFreqItemSets(filtered, i)
+        }.map(a => (a.mkString(Separator), 1L))
+        .reduceByKey(_ + _)
+        .filter(_._2 >= minCount)
+
+      if (i == numItem - 1) {
+        antecedentCount = freqPatternCount
+      }
+
+      freqRank = freqPatternCount.flatMap { a =>
+        a._1.split(Separator)
+          .map(_.toInt)
+      }
+        .distinct()
+        .collect
+
     }
-
-    //    freqPatternCount //debug test
-    run(freqPatternCount, freqItemCount, size)
+    //    freqPatternCount.union(antecedentCount) //debug test code
+    run(freqPatternCount, antecedentCount, size, freqItem)
   }
 
   /**
-    * create any possible candidate for frequent pattern based on the previous iterator
+    * create any possible candidate for frequent pattern based on a transaction
     */
-  def makeFreqPattern[Item: ClassTag](rdd: RDD[Array[Item]]): RDD[Array[Item]] = {
-
-    val arr = rdd.flatMap(i => i).distinct()
-    val newRdd = rdd.cartesian(arr).filter(a => !a._1.contains(a._2))
-      .map(a => a._1 ++ Array(a._2))
-    newRdd
+  def genFreqItemSets[Item: ClassTag](transaction: Array[Int], numItem: Int): List[Array[Int]] = {
+    transaction.combinations(numItem).toList
   }
 
   /**
     * count all attributes of every frequent pattern
     */
-  def run[Item: ClassTag](freqPatternCount: RDD[(Array[Item], Long)],
-                          freqItemCount: RDD[(Array[Item], Long)],
-                          size: Long): RDD[FrequentPattern[Item]] = {
+  def run[Item: ClassTag](freqPatternCount: RDD[(String, Long)],
+                          antecedentCount: RDD[(String, Long)],
+                          size: Long,
+                          freqItem: Array[Item]): RDD[FrequentPattern[Item]] = {
 
-    val freqItem = freqItemCount.collect().toMap
+    val freqItemSetCount = antecedentCount.map(a => (a._1.split(Separator), a._2))
+      .collect()
+      .toMap
 
-    freqPatternCount.map { patternCount =>
-      val pattern = patternCount._1
-      val count = patternCount._2.toDouble
+    freqPatternCount.flatMap { patternCount =>
+      val pattern = patternCount._1.split(Separator)
+      val patternFreq = patternCount._2
 
-      val pat = pattern.splitAt(pattern.length - 1)
-      val antecedent = pat._1
-      val consequent = pat._2
+      val antecedents = freqItemSetCount.filterKeys(pattern.diff(_).length == 1)
 
-      val confidence = count / freqItem.filterKeys(_.containsSlice(consequent)).head._2
-      val support = count / size
-      val lift = confidence / support
-
-      FrequentPattern(antecedent, consequent, support, confidence, lift, count.toLong)
+      antecedents.map { antecedentC =>
+        val antecedent = antecedentC._1
+        val antecedentFreq = antecedentC._2
+        val consequent = pattern.diff(antecedent)
+        val confidence = 1.0 * patternFreq / antecedentFreq
+        val support = 1.0 * patternFreq / size
+        val lift = confidence / support
+        FrequentPattern(antecedent.map(a => freqItem(a.toInt)),
+          consequent.map(a => freqItem(a.toInt)),
+          support, confidence, lift)
+      }
     }
   }
 
@@ -118,49 +150,44 @@ object Apriori {
     val sc = new SparkContext(conf)
 
     val minSupport = 0.2
-    val numItem = 3
-    val minConfidence = 0.8
+    val numItem = 2
+    val minConfidence = 0.0
 
-    //    val path = "data/sample_fpgrowth.txt"
-    //    val data = sc.textFile(path).map(_.trim.split(" "))
+    val path = "data/sample_fpgrowth.txt"
+    val data = sc.textFile(path).map(_.trim.split(" "))
 
-    val path = "data/ml-100k/u.data"
-    val ratingRdd = sc.textFile(path).map(_.split("\t")).map { l => rating(l(0), l(1), l(2), l(3)) }
-    val data = ratingRdd.map { r => (r.userId, r.itemId) }.groupByKey.map(_._2.toArray)
+    //    val path = "data/ml-100k/u.data"
+    //    val ratingRdd = sc.textFile(path).map(_.split("\t")).map { l => rating(l(0), l(1), l(2), l(3)) }
+    //    val data = ratingRdd.map { r => (r.userId, r.itemId) }.groupByKey.map(_._2.toArray)
 
-    //    countItem(data).foreach(a =>println(a._1.mkString("[",",","]") + "  "+a._2))
+    //    countItemFreq(data, 2l).foreach(a => println(a))
 
     val frequentPattern = freqPattern(data, minSupport, numItem)
-
+    //debug test code
     //    frequentPattern.foreach { a =>
     //      println(
-    //        a.antecedent.mkString("[", ",", "]") + " => " +
-    //          a.consequent.mkString("[", ",", "]") + " :\t" +
-    //          " support :" + a.support + "\t" +
-    //          " confidence :" + a.confidence + "\t" +
-    //          " lift :" + a.lift + "\t" +
-    //          " frequentCount :" + a.frequentCount
+    //        a._1.mkString("[", ",", "]") + "   " + a._2
     //      )
     //    }
-    //    debug test
-    //    frequentPattern.foreach { a =>
-    //      val pattern = a._1
-    //      val pat = pattern.splitAt(pattern.length - 1)
-    //
-    //      val antecedent = pat._1
-    //      val consequent = pat._2
-    //      println(antecedent.mkString("[", ",", "]") + "   " + consequent.mkString("[", ",", "]"))
-    //    }
 
-    //    frequentPattern.map(format(_)).saveAsTextFile("data/res/apriori/1")
-    frequentPattern.filter(_.confidence >= minConfidence).map{ fp =>
+    frequentPattern.foreach { a =>
+      println(
+        a.antecedent.mkString("[", ",", "]") + " => " +
+          a.consequent.mkString("[", ",", "]") + " :\t" +
+          " support :" + a.support + "\t" +
+          " confidence :" + a.confidence + "\t" +
+          " lift :" + a.lift
+      )
+    }
+
+    frequentPattern.filter(_.confidence >= minConfidence).map { fp =>
       fp.antecedent.mkString("[", ",", "]") + " => " +
         fp.consequent.mkString("[", ",", "]") + "\t:\t" +
         "support :" + fp.support + "\t" +
         "confidence :" + fp.confidence + "\t" +
-        "lift :" + fp.lift + "\t" +
-        "frequentCount :" + fp.frequentCount
-    }.saveAsTextFile("data/res/apriori/3")
+        "lift :" + fp.lift
+    }
+//      .foreach(println)
   }
 
 }

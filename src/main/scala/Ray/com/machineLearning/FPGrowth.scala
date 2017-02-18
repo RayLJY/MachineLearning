@@ -17,13 +17,15 @@ object FPGrowth {
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setAppName("Test FPGrowth").setMaster("local")
     val sc = new SparkContext(conf)
-    val path = "data/ml-100k/u.data"
-    val ratingRdd = sc.textFile(path).map(_.split("\t")).map { l => rating(l(0), l(1), l(2), l(3)) }
+    //    val path = "data/ml-100k/u.data"
+    //    val ratingRdd = sc.textFile(path).map(_.split("\t")).map { l => rating(l(0), l(1), l(2), l(3)) }
+    //    val rdd = ratingRdd.map { r => (r.userId, r.itemId) }.groupByKey.map(_._2.toArray)
 
-    val rdd = ratingRdd.map { r => (r.userId, r.itemId) }.groupByKey.map(_._2.toArray)
+    val path = "data/sample_fpgrowth.txt"
+    val rdd = sc.textFile(path).map(_.trim.split(" "))
 
     val minSupport = 0.2
-    val minConfidence = 0.8
+    val minConfidence = 0.0
 
     val fpg = new FPGrowth()
       .setMinSupport(minSupport)
@@ -42,11 +44,16 @@ object FPGrowth {
     //          + ", " + rule.confidence)
     //    }
 
-    //  text Apriori object
+    //test Apriori object
     model.generateAssociationRules(minConfidence).map { rule =>
       rule.antecedent.mkString("[", ",", "]") + " => " + rule.consequent.mkString("[", ",", "]") + ": " + rule.confidence
-    }.saveAsTextFile("data/res/apriori/2")
+    }
+//      .foreach(println)
 
+    model.freqItemsets.filter { itemSet => itemSet.items.length == 1 }.map { itemSet =>
+      itemSet.items.mkString("[", ",", "]") + ", " + itemSet.freq
+    }
+      .foreach(println)
   }
 
   case class rating(userId: String, itemId: String, rating: String, timestamp: String)
