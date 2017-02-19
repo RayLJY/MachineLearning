@@ -3,7 +3,7 @@ package Ray.com.machineLearning
 import java.{util => ju}
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{SparkConf, SparkContext, SparkException}
 
 import scala.reflect.ClassTag
 
@@ -88,7 +88,13 @@ object Apriori {
         .reduceByKey(_ + _)
         .filter(_._2 >= minCount)
 
-      if (i == numItem - 1) {
+      if(freqPatternCount.isEmpty()){
+        throw new SparkException(
+          s"we don't fund the frequent pattern that the number of item is $i," +
+          s"please try to reset parameter of numItem.")
+      }
+
+      if (i < numItem - 1) {
         antecedentCount = freqPatternCount
       }
 
@@ -150,7 +156,7 @@ object Apriori {
     val sc = new SparkContext(conf)
 
     val minSupport = 0.2
-    val numItem = 2
+    val numItem = 5
     val minConfidence = 0.0
 
     val path = "data/sample_fpgrowth.txt"
