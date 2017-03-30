@@ -1,4 +1,4 @@
-package Ray.com.segment;
+package Ray.segment;
 
 import org.lionsoul.jcseg.tokenizer.ASegment;
 import org.lionsoul.jcseg.tokenizer.core.*;

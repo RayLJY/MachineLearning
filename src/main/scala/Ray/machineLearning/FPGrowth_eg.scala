@@ -1,4 +1,4 @@
-package Ray.com.machineLearning
+package Ray.machineLearning
 
 import org.apache.spark.mllib.fpm.FPGrowth
 import org.apache.spark.{SparkConf, SparkContext}
@@ -12,7 +12,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * finally, all data will form a data set of transactions.
   *
   */
-object FPGrowth {
+object FPGrowth_eg {
 
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setAppName("Test FPGrowth").setMaster("local")

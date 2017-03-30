@@ -1,6 +1,6 @@
-package Ray.com.word2Vector
+package Ray.word2Vector
 
-import Ray.com.segment.SegmentS
+import Ray.segment.SegmentS
 import org.apache.spark.ml.feature.{HashingTF, IDF}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD

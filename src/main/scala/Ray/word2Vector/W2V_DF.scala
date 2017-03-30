@@ -1,4 +1,4 @@
-package Ray.com.word2Vector
+package Ray.word2Vector
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.ml.feature.{Word2Vec, Word2VecModel}

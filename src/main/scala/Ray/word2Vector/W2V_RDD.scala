@@ -1,7 +1,8 @@
-package Ray.com.word2Vector
+package Ray.word2Vector
 
 import Ray.com.utils.VectorUtil
-import Ray.com.segment.SegmentS
+import Ray.segment.SegmentS
+import Ray.utils.VectorUtil
 import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD

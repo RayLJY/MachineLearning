@@ -1,4 +1,4 @@
-package Ray.com.machineLearning
+package Ray.machineLearning
 
 import java.{util => ju}
 

@@ -1,4 +1,4 @@
-package Ray.com.segment
+package Ray.segment
 
 import scala.collection.JavaConverters._
 
