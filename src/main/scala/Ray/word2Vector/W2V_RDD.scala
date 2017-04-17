@@ -1,6 +1,5 @@
 package Ray.word2Vector
 
-import Ray.com.utils.VectorUtil
 import Ray.segment.SegmentS
 import Ray.utils.VectorUtil
 import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
@@ -20,7 +19,7 @@ object W2V_RDD {
   /**
     * build word2Vec model
     *
-    * @param rdd every List represents a sentence/article and every word represents a word
+    * @param rdd every List represents a sentence/article and every String represents a word
     */
   def buildModel(rdd: RDD[List[String]], vectorSize: Int = 100, minCount: Int = 0, seed: Long = 1L): Word2VecModel = {
     val w2v = new Word2Vec()
@@ -34,7 +33,7 @@ object W2V_RDD {
   /**
     * build word2Vec model ,then return word and vector that represents word
     *
-    * @param rdd every List represents a sentence/article and every word represents a word
+    * @param rdd every List represents a sentence/article and every String represents a word
     */
   def getWordVectors(rdd: RDD[List[String]], vectorSize: Int = 100, minCount: Int = 0, seed: Long = 1L): Map[String, Array[Float]] = {
     val model = buildModel(rdd, vectorSize, minCount, seed)
@@ -42,7 +41,6 @@ object W2V_RDD {
   }
 
   /**
-    *
     * in this method, every sentence/article will be turn to a vector
     *
     * @param rdd in this rrd, every List represents a sentence/article
@@ -62,19 +60,22 @@ object W2V_RDD {
     }
   }
 
-  def makeWordsVector(rdd: RDD[List[String]], wordVector: Map[String, Array[Float]], vectorSize: Int): RDD[(List[String], Vector)] = {
+  /**
+    * in this method, every sentence/article will be turn to a vector
+    *
+    * @param list in this rrd, every list represents a sentence/article
+    */
+  def makeWordsVectors(list: List[String], wordVector: Map[String, Array[Float]], vectorSize: Int = 100): (List[String], Vector) = {
     val vectors = wordVector
-    rdd.map { sentence =>
-      val sum = Vectors.zeros(vectorSize)
-      if (sentence.nonEmpty) {
-        sentence.foreach { word =>
-          val v = Vectors.dense(vectors(word).map(_.toDouble))
-          VectorUtil.axpy(1.0, v, sum)
-        }
-        VectorUtil.scal(1.0 / sentence.size, sum)
+    val sum = Vectors.zeros(vectorSize)
+    if (list.nonEmpty) {
+      list.foreach { word =>
+        val v = Vectors.dense(vectors(word).map(_.toDouble))
+        VectorUtil.axpy(1.0, v, sum)
       }
-      (sentence, sum)
+      VectorUtil.scal(1.0 / list.size, sum)
     }
+    (list, sum)
   }
 
   //**********************************************  test area  ********************************************************
