@@ -19,9 +19,9 @@ public class Segment implements Serializable {
 
     private ASegment seg = null;
 
-    private static String[] ePunctuation = ", \\. : ; ' \" / \\\\ \\[ \\] \\{ \\} \\| \\( \\) \\s - ! < > \\? _ @".split(" ");
+    private static String[] ECharacter = {"[^a-zA-Z0-9]"};
 
-    private static String[] cPunctuation = "，,。,《,》,：,；,「,」,【,】,￥,“,”,、,（,）,．".split(",");
+    private static String[] CCharacter = {"[^a-zA-Z0-9\u4e00-\u9fa5]"};
 
     public Segment() {
         JcsegTaskConfig config = new JcsegTaskConfig(Segment.class.getResource("").getPath() + "/jcseg.properties");
@@ -71,7 +71,7 @@ public class Segment implements Serializable {
      * @param sentence Chinese sentence
      */
     public List<String> splitCSentence2WordList(String sentence) {
-        return splitSentence2WordList(sentence, cPunctuation);
+        return splitSentence2WordList(sentence, CCharacter);
     }
 
     /**
@@ -82,7 +82,7 @@ public class Segment implements Serializable {
      * @param sentence English sentence
      */
     public List<String> splitESentence2WordList(String sentence) {
-        return splitSentence2WordList(sentence, ePunctuation);
+        return splitSentence2WordList(sentence, ECharacter);
     }
 
     //***********************************************  test area  ****************************************************
