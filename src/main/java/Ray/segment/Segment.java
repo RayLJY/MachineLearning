@@ -3,7 +3,6 @@ package Ray.segment;
 import org.lionsoul.jcseg.tokenizer.ASegment;
 import org.lionsoul.jcseg.tokenizer.core.*;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -12,26 +11,22 @@ import java.util.List;
 /**
  * Created by ray on 17/2/6.
  * <p>
- * This class that split sentences to words
- * by Jcseg jar is a basic class
+ * This class that split sentences to words by Jcseg jar is a basic class
+ * and can be used in multi-thread.
  */
 public class Segment implements Serializable {
 
-    private ASegment seg = null;
+    private JcsegTaskConfig config = null;
+    private ADictionary dic = null;
 
     private static String[] ECharacter = {"[^a-zA-Z0-9]"};
 
     private static String[] CCharacter = {"[^a-zA-Z0-9\u4e00-\u9fa5]"};
 
     public Segment() {
-        JcsegTaskConfig config = new JcsegTaskConfig(Segment.class.getResource("").getPath() + "/jcseg.properties");
-//        JcsegTaskConfig config = new JcsegTaskConfig();
-        ADictionary dic = DictionaryFactory.createDefaultDictionary(config);
-        try {
-            seg = (ASegment) SegmentFactory.createJcseg(JcsegTaskConfig.COMPLEX_MODE, config, dic);
-        } catch (JcsegException e) {
-            e.printStackTrace();
-        }
+        config = new JcsegTaskConfig(Segment.class.getResource("").getPath() + "/jcseg.properties");
+        //config = new JcsegTaskConfig();
+        dic = DictionaryFactory.createDefaultDictionary(config);
     }
 
     /**
@@ -39,13 +34,15 @@ public class Segment implements Serializable {
      */
     public List<String> splitSentence2WordList(String sentence) {
         ArrayList<String> list = new ArrayList<>();
+
         try {
+            ASegment seg = (ASegment) SegmentFactory.createJcseg(JcsegTaskConfig.COMPLEX_MODE, config, dic);
             seg.reset(new StringReader(sentence));
             IWord word;
             while ((word = seg.next()) != null) {
                 list.add(word.getValue());
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return list;

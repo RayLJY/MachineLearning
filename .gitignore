@@ -3,4 +3,5 @@ project/target
 target
 .idea
 .DS_Store
+src/main/test
 
