@@ -21,7 +21,7 @@ public class Segment implements Serializable {
 
     private static String[] ECharacter = {"[^a-zA-Z0-9]"};
 
-    private static String[] CCharacter = {"[^a-zA-Z0-9\u4e00-\u9fa5]"};
+    private static String[] CCharacter = {"[^\u4e00-\u9fa5]"};
 
     public Segment() {
         config = new JcsegTaskConfig(Segment.class.getResource("").getPath() + "/jcseg.properties");
