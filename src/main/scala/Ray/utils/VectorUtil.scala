@@ -8,9 +8,9 @@ import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
   * Created by ray on 17/2/9.
   *
   * This util object is for Vector operation
-  * ps: I copy class `org.apache.spark.mllib.linalg.BLAS`
+  * ps: Copy from `org.apache.spark.mllib.linalg.BLAS`
   */
-object VectorUtil extends Serializable{
+object VectorUtil extends Serializable {
 
   @transient private var _f2jBLAS: NetlibBLAS = _
   @transient private var _nativeBLAS: NetlibBLAS = _
@@ -22,6 +22,7 @@ object VectorUtil extends Serializable{
     }
     _f2jBLAS
   }
+
   /**
     * y += a * x
     */
@@ -41,6 +42,38 @@ object VectorUtil extends Serializable{
       case _ =>
         throw new IllegalArgumentException(
           s"axpy only supports adding to a dense vector but got type ${y.getClass}.")
+    }
+  }
+
+  /**
+    * y += a * x
+    */
+  private def axpy(a: Double, x: DenseVector, y: DenseVector): Unit = {
+    val n = x.size
+    f2jBLAS.daxpy(n, a, x.values, 1, y.values, 1)
+  }
+
+  /**
+    * y += a * x
+    */
+  private def axpy(a: Double, x: SparseVector, y: DenseVector): Unit = {
+    val xValues = x.values
+    val xIndices = x.indices
+    val yValues = y.values
+    val nnz = xIndices.length
+
+    if (a == 1.0) {
+      var k = 0
+      while (k < nnz) {
+        yValues(xIndices(k)) += xValues(k)
+        k += 1
+      }
+    } else {
+      var k = 0
+      while (k < nnz) {
+        yValues(xIndices(k)) += a * xValues(k)
+        k += 1
+      }
     }
   }
 
