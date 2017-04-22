@@ -18,6 +18,7 @@ libraryDependencies += "org.apache.hbase" % "hbase-server" % "1.0.3" % "provided
 
 // https://mvnrepository.com/artifact/org.lionsoul/jcseg-core
 libraryDependencies += "org.lionsoul" % "jcseg-core" % "2.0.0"
+libraryDependencies += "io.github.zacker330.es" % "ik-analysis-core" % "1.0.0"
 
 assemblyMergeStrategy in assembly := {
   case PathList(ps@_*) if ps.last endsWith "*.xml" => MergeStrategy.first
