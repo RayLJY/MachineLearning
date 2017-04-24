@@ -12,7 +12,7 @@ import java.util.List;
  * Created by ray on 17/2/6.
  * <p>
  * This class that split sentences to words by Jcseg jar is a basic class
- * and can be used in multi-thread.
+ * and can be used in multi-thread environment.
  */
 public class Segment implements Serializable {
 
