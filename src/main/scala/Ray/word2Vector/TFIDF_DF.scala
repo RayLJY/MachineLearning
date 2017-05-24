@@ -4,9 +4,9 @@ import Ray.segment.SegmentS
 import org.apache.spark.ml.feature.{HashingTF, IDF}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row}
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.ml.linalg.SparseVector
+import org.apache.spark.mllib.linalg.Vectors
 
 /**
   * Created by ray on 17/2/8.
@@ -58,9 +58,12 @@ object TFIDF_DF {
     * changes dataFrame format to LabeledPoint format and marks category
     */
   def dataFrame2LabeledPoint(dataFrame: DataFrame, tfIdf: String, category: Double): RDD[LabeledPoint] = {
-    dataFrame.select(tfIdf).map { case Row(v: Vector) =>
-      LabeledPoint(category, v)
-    }
+    dataFrame.select(tfIdf).rdd
+      .map{row =>
+        val v = row.getAs[SparseVector](0)
+        // Vectors.fromML(v) // org.apache.spark.ml.linalg.SparseVector 转 org.apache.spark.mllib.linalg.Vector
+        LabeledPoint(category,Vectors.fromML(v))
+      }
   }
 
   //**********************************************  test area  ********************************************************
@@ -68,10 +71,12 @@ object TFIDF_DF {
   case class dataSet(id: Int, words: List[String])
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("TF-IDF DataFrame").setMaster("local")
-    val sc = new SparkContext(conf)
-    val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-    import sqlContext.implicits._
+    val spark = SparkSession.builder()
+      .appName("TF-IDF DataFrame")
+      .master("local")
+      .getOrCreate()
+    val sc = spark.sparkContext
+    import spark.implicits._
 
     val path = "data/p1"
 
@@ -88,13 +93,13 @@ object TFIDF_DF {
 
     //计算 TF 值
     val tfDF = dataFrameAddTF(df, "words", "tf", 10000)
-    tfDF.foreach(println)
-    tfDF.select("tf").foreach(println)
+    tfDF.foreach(println(_))
+    tfDF.select("tf").foreach(println(_))
 
     //计算 TF-IDF 值
     val tfIdfDF = dataFrameAddTFIDF(tfDF, "tf", "tfIdf")
-    tfIdfDF.foreach(println)
-    tfIdfDF.select("tf", "tfIdf").foreach(println)
+    tfIdfDF.foreach(println(_))
+    tfIdfDF.select("tf", "tfIdf").foreach(println(_))
 
     //计算 TF 值 LabeledPoint 格式
     val tfLP = makeLabeledPointTF(df, "words", "tf", 10000, 1.0)

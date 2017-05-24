@@ -67,18 +67,18 @@ object W2V_DF {
     ).map(_.replaceAll("[\\.\\,]", "").split(" ")).map(Tuple1.apply))
       .toDF("word")
 
-    df.foreach(println)
+    df.foreach(println(_))
     df.show()
 
 
     val model = buildModel(df, "word", vectorSize = 20)
-    model.findSynonyms("Tom", 10).foreach(println)
+    model.findSynonyms("Tom", 10).foreach(println(_))
 
     val vectors = getWordsVectors(df, "word", vectorSize = 20)
-    vectors.foreach(println)
+    vectors.foreach(println(_))
 
     val sentence = makeWordsVector(df, "word", vectorSize = 20)
-    sentence.foreach(println)
+    sentence.foreach(println(_))
 
   }
 
