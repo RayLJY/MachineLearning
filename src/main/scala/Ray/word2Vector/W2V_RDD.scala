@@ -5,7 +5,7 @@ import Ray.utils.VectorUtil
 import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 /**
   * Created by ray on 17/2/9.
@@ -82,8 +82,12 @@ object W2V_RDD {
 
   def main(args: Array[String]): Unit = {
 
-    val conf = new SparkConf().setAppName("Word2Vec RDD").setMaster("local")
-    val sc = new SparkContext(conf)
+    val spark = SparkSession.builder()
+      .appName("Word2Vec RDD")
+      .master("local")
+      .getOrCreate()
+
+    val sc = spark.sparkContext
     val path = "data/世界人权宣言.txt"
 
     val data = sc.textFile(path).filter(_.length > 0)
@@ -110,5 +114,8 @@ object W2V_RDD {
     val rdd2 = sc.wholeTextFiles(path).map(p => SegmentS.splitCArticle2Words(p._2))
     val article = makeWordsVector(rdd2)
     article.foreach(println)
+
+    // close spark session
+    spark.close()
   }
 }

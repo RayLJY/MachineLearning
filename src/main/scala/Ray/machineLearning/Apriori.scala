@@ -3,7 +3,8 @@ package Ray.machineLearning
 import java.{util => ju}
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext, SparkException}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.SparkException
 
 import scala.reflect.ClassTag
 
@@ -58,7 +59,7 @@ object Apriori {
     * iteratively multiple iterative procedure of make frequent pattern,
     * until the number of item of frequent pattern equal numItem
     */
-  def freqPattern[Item: ClassTag](rdd: RDD[Array[Item]], minSupport: Double, numItem: Int = 2) = {
+  def freqPattern[Item: ClassTag](rdd: RDD[Array[Item]], minSupport: Double, numItem: Int = 2): RDD[FrequentPattern[Item]] = {
 
     if (numItem < 2) {
       throw new IllegalArgumentException(" the number of item of frequent patter must be greater than 1")
@@ -82,19 +83,20 @@ object Apriori {
 
       freqPatternCount = item2Rank.filter(_.length >= i)
         .flatMap { transaction =>
+          // filter not frequent item in a item set
           val filtered = transaction.intersect(freqRank)
           genFreqItemSets(filtered, i)
         }.map(a => (a.mkString(Separator), 1L))
         .reduceByKey(_ + _)
         .filter(_._2 >= minCount)
 
-      if(freqPatternCount.isEmpty()){
+      if (freqPatternCount.isEmpty()) {
         throw new SparkException(
           s"we don't fund the frequent pattern that the number of item is $i," +
-          s"please try to reset parameter of numItem.")
+            s"please try to reset parameter of numItem.")
       }
 
-      if (i < numItem - 1) {
+      if (i <= numItem - 1) {
         antecedentCount = freqPatternCount
       }
 
@@ -106,7 +108,9 @@ object Apriori {
         .collect
 
     }
-    //    freqPatternCount.union(antecedentCount) //debug test code
+    // debug test code
+    //    println("freqPatternCount： " + freqPatternCount.count())
+    //    println("antecedentCount： " + antecedentCount.count())
     run(freqPatternCount, antecedentCount, size, freqItem)
   }
 
@@ -125,7 +129,8 @@ object Apriori {
                           size: Long,
                           freqItem: Array[Item]): RDD[FrequentPattern[Item]] = {
 
-    val freqItemSetCount = antecedentCount.map(a => (a._1.split(Separator), a._2))
+    val freqItemSetCount = antecedentCount
+      .map(a => (a._1.split(Separator), a._2))
       .collect()
       .toMap
 
@@ -152,15 +157,23 @@ object Apriori {
   //**********************************************  test area  ********************************************************
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("Apriori Test").setMaster("local")
-    val sc = new SparkContext(conf)
+
+    val spark = SparkSession.builder()
+      .appName("Apriori Test")
+      .master("local")
+      .getOrCreate()
+
+    val sc = spark.sparkContext
 
     val minSupport = 0.2
-    val numItem = 5
-    val minConfidence = 0.0
+    val numItem = 2
+    val minConfidence = 0.5
 
     val path = "data/sample_fpgrowth.txt"
     val data = sc.textFile(path).map(_.trim.split(" "))
+
+    // debug test code
+    //    data.map(_.mkString("[", ",", "]")).foreach(println)
 
     //    val path = "data/ml-100k/u.data"
     //    val ratingRdd = sc.textFile(path).map(_.split("\t")).map { l => rating(l(0), l(1), l(2), l(3)) }
@@ -169,12 +182,6 @@ object Apriori {
     //    countItemFreq(data, 2l).foreach(a => println(a))
 
     val frequentPattern = freqPattern(data, minSupport, numItem)
-    //debug test code
-    //    frequentPattern.foreach { a =>
-    //      println(
-    //        a._1.mkString("[", ",", "]") + "   " + a._2
-    //      )
-    //    }
 
     frequentPattern.foreach { a =>
       println(
@@ -193,7 +200,12 @@ object Apriori {
         "confidence :" + fp.confidence + "\t" +
         "lift :" + fp.lift
     }
-//      .foreach(println)
+      .foreach(println)
+
+    // close spark session
+    spark.close()
   }
+
+  case class rating(userId: String, itemId: String, rating: String, timestamp: String)
 
 }

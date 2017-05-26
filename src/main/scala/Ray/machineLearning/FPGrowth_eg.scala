@@ -1,7 +1,7 @@
 package Ray.machineLearning
 
 import org.apache.spark.mllib.fpm.FPGrowth
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 /**
   * Created by ray on 17/2/16.
@@ -15,8 +15,13 @@ import org.apache.spark.{SparkConf, SparkContext}
 object FPGrowth_eg {
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("Test FPGrowth").setMaster("local")
-    val sc = new SparkContext(conf)
+
+    val spark = SparkSession.builder()
+      .appName("Test FPGrowth")
+      .master("local")
+      .getOrCreate()
+
+    val sc = spark.sparkContext
     //    val path = "data/ml-100k/u.data"
     //    val ratingRdd = sc.textFile(path).map(_.split("\t")).map { l => rating(l(0), l(1), l(2), l(3)) }
     //    val rdd = ratingRdd.map { r => (r.userId, r.itemId) }.groupByKey.map(_._2.toArray)
@@ -48,12 +53,15 @@ object FPGrowth_eg {
     model.generateAssociationRules(minConfidence).map { rule =>
       rule.antecedent.mkString("[", ",", "]") + " => " + rule.consequent.mkString("[", ",", "]") + ": " + rule.confidence
     }
-//      .foreach(println)
+      .foreach(println)
 
     model.freqItemsets.filter { itemSet => itemSet.items.length == 1 }.map { itemSet =>
       itemSet.items.mkString("[", ",", "]") + ", " + itemSet.freq
     }
       .foreach(println)
+
+    // close spark session
+    spark.close()
   }
 
   case class rating(userId: String, itemId: String, rating: String, timestamp: String)

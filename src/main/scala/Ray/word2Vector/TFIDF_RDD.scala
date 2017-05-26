@@ -5,7 +5,7 @@ import org.apache.spark.mllib.feature.{HashingTF, IDF}
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 /**
   * Created by ray on 17/2/7.
@@ -74,8 +74,12 @@ object TFIDF_RDD {
 
   def main(args: Array[String]): Unit = {
 
-    val conf = new SparkConf().setAppName("TF-IDF RDD").setMaster("local")
-    val sc = new SparkContext(conf)
+    val spark = SparkSession.builder()
+    .appName("TF-IDF RDD")
+    .master("local")
+    .getOrCreate()
+
+    val sc = spark.sparkContext
     val path = "data/世界人权宣言.txt"
 
     val data = sc.textFile(path).filter(_.length > 0)
@@ -102,5 +106,8 @@ object TFIDF_RDD {
     //将分词数据集转换成 LabeledPoint -- 计算 TF-IDF 值
     val tfIdfLP = TFIDF_RDD.makeLabeledPointTFIDF(rdd, 1000, 1.0)
     tfIdfLP.foreach(println)
+
+    // close spark session
+    spark.close()
   }
 }

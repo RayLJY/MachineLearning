@@ -75,6 +75,7 @@ object TFIDF_DF {
       .appName("TF-IDF DataFrame")
       .master("local")
       .getOrCreate()
+
     val sc = spark.sparkContext
     import spark.implicits._
 
@@ -109,5 +110,7 @@ object TFIDF_DF {
     val tfIdfLP = makeLabeledPointTFIDF(tfDF, "tf", "tfIdf", 1.0)
     tfIdfLP.foreach(println)
 
+    // close spark session
+    spark.close()
   }
 }

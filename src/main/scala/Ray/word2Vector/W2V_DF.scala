@@ -1,8 +1,7 @@
 package Ray.word2Vector
 
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.ml.feature.{Word2Vec, Word2VecModel}
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
   * Created by ray on 17/2/9.
@@ -53,9 +52,12 @@ object W2V_DF {
 
   def main(args: Array[String]): Unit = {
 
-    val conf = new SparkConf().setAppName("word2vector DataFrame").setMaster("local")
-    val sc = new SparkContext(conf)
-    val sql = new SQLContext(sc)
+    val spark = SparkSession.builder()
+      .appName("word2vector DataFrame")
+      .master("local")
+      .getOrCreate()
+
+    val sql = spark.sqlContext
 
     val df = sql.createDataFrame(Seq(
       "Tom is a stupid cat, and one of friends is a mouse.",
@@ -80,6 +82,8 @@ object W2V_DF {
     val sentence = makeWordsVector(df, "word", vectorSize = 20)
     sentence.foreach(println(_))
 
+    // close spark session
+    spark.close()
   }
 
 }
