@@ -1,7 +1,7 @@
-package Ray.word2Vector
+package ML.word2Vector
 
-import Ray.segment.SegmentS
-import Ray.utils.VectorUtil
+import ML.seg.SegmentS
+import ML.utils.VectorUtil
 import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
@@ -11,7 +11,7 @@ import org.apache.spark.sql.SparkSession
   * Created by ray on 17/2/9.
   *
   * Use word2Vec Class to turn word to vector in this object.
-  * Format of input data is RDD[List[String]]
+  * Format of input data is RDD[List[String]].
   *
   */
 object W2V_RDD {
@@ -88,7 +88,7 @@ object W2V_RDD {
       .getOrCreate()
 
     val sc = spark.sparkContext
-    val path = "data/世界人权宣言.txt"
+    val path = "data/ml/世界人权宣言.txt"
 
     val data = sc.textFile(path).filter(_.length > 0)
     data.foreach(println)

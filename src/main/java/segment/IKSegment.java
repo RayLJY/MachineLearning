@@ -1,4 +1,4 @@
-package Ray.segment;
+package segment;
 
 import org.wltea.analyzer.cfg.Configuration;
 import org.wltea.analyzer.cfg.DefaultConfig;

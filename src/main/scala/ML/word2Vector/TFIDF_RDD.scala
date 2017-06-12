@@ -1,6 +1,6 @@
-package Ray.word2Vector
+package ML.word2Vector
 
-import Ray.segment.SegmentS
+import ML.seg.SegmentS
 import org.apache.spark.mllib.feature.{HashingTF, IDF}
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
@@ -80,7 +80,7 @@ object TFIDF_RDD {
     .getOrCreate()
 
     val sc = spark.sparkContext
-    val path = "data/世界人权宣言.txt"
+    val path = "data/ml/世界人权宣言.txt"
 
     val data = sc.textFile(path).filter(_.length > 0)
     data.foreach(println)

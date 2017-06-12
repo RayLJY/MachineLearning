@@ -1,10 +1,10 @@
-package Ray.machineLearning
+package ML.algorithm
 
 import java.{util => ju}
 
+import org.apache.spark.SparkException
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.SparkException
 
 import scala.reflect.ClassTag
 
@@ -169,13 +169,13 @@ object Apriori {
     val numItem = 2
     val minConfidence = 0.5
 
-    val path = "data/sample_fpgrowth.txt"
+    val path = "data/ml/sample_fpgrowth.txt"
     val data = sc.textFile(path).map(_.trim.split(" "))
 
     // debug test code
     //    data.map(_.mkString("[", ",", "]")).foreach(println)
 
-    //    val path = "data/ml-100k/u.data"
+    //    val path = "data/ml/ml-100k/u.data"
     //    val ratingRdd = sc.textFile(path).map(_.split("\t")).map { l => rating(l(0), l(1), l(2), l(3)) }
     //    val data = ratingRdd.map { r => (r.userId, r.itemId) }.groupByKey.map(_._2.toArray)
 

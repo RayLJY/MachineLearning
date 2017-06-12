@@ -1,6 +1,6 @@
-package Ray.word2Vector
+package ML.word2Vector
 
-import Ray.segment.SegmentS
+import ML.seg.SegmentS
 import org.apache.spark.ml.feature.{HashingTF, IDF}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
@@ -79,7 +79,7 @@ object TFIDF_DF {
     val sc = spark.sparkContext
     import spark.implicits._
 
-    val path = "data/p1"
+    val path = "data/ml/p1"
 
     val data = sc.wholeTextFiles(path)
     data.foreach(println)

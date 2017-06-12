@@ -1,4 +1,6 @@
-package Ray.segment
+package ML.seg
+
+import segment.Segment
 
 import scala.collection.JavaConverters._
 

@@ -1,4 +1,4 @@
-package Ray.word2Vector
+package ML.word2Vector
 
 import org.apache.spark.ml.feature.{Word2Vec, Word2VecModel}
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -7,7 +7,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
   * Created by ray on 17/2/9.
   *
   * Use word2Vec Class to turn word to vector in this object.
-  * Format of input data is DataFrame
+  * Format of input data is DataFrame.
   */
 object W2V_DF {
 

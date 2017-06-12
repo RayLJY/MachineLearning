@@ -1,4 +1,4 @@
-package Ray.machineLearning
+package ML.algorithm
 
 import org.apache.spark.mllib.fpm.FPGrowth
 import org.apache.spark.sql.SparkSession
@@ -12,7 +12,7 @@ import org.apache.spark.sql.SparkSession
   * finally, all data will form a data set of transactions.
   *
   */
-object FPGrowth_eg {
+object FPGrowthE {
 
   def main(args: Array[String]): Unit = {
 
@@ -26,7 +26,7 @@ object FPGrowth_eg {
     //    val ratingRdd = sc.textFile(path).map(_.split("\t")).map { l => rating(l(0), l(1), l(2), l(3)) }
     //    val rdd = ratingRdd.map { r => (r.userId, r.itemId) }.groupByKey.map(_._2.toArray)
 
-    val path = "data/sample_fpgrowth.txt"
+    val path = "data/ml/sample_fpgrowth.txt"
     val rdd = sc.textFile(path).map(_.trim.split(" "))
 
     val minSupport = 0.2
